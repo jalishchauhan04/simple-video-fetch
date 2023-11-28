@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Video Upload</title>
+</head>
+
+<body>
+    <form id="videoUploadForm">
+        <label for="videoFile">Select Video File:</label>
+        <input type="file" id="videoFile" accept="video/mp4,video/x-m4v,video/*" required>
+        <input type="url" id="videoURL" placeholder="Enter Video URL">
+        <button type="submit">Upload Video</button>
+    </form>
+
+    <script>
+        const videoForm = document.getElementById('videoUploadForm');
+
+        videoForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+
+            const fileInput = document.getElementById('videoFile');
+            const urlInput = document.getElementById('videoURL');
+
+            // Check if a file is selected
+            if (fileInput.files.length > 0) {
+                const videoFile = fileInput.files[0];
+                handleFileUpload(videoFile);
+            } else if (urlInput.value.trim() !== '') {
+                const videoURL = urlInput.value.trim();
+                handleURLUpload(videoURL);
+            } else {
+                alert('Please select a file or enter a video URL.');
+            }
+        });
+
+        function handleFileUpload(videoFile) {
+            const reader = new FileReader();
+
+            reader.onload = function (event) {
+                const fileData = event.target.result;
+                uploadVideo(fileData);
+            };
+
+            reader.readAsDataURL(videoFile);
+        }
+
+        function handleURLUpload(videoURL) {
+            fetch(videoURL)
+                .then(response => response.blob())
+                .then(blob => {
+                    const reader = new FileReader();
+                    reader.onload = function (event) {
+                        const fileData = event.target.result;
+                        uploadVideo(fileData);
+                    };
+                    reader.readAsDataURL(blob);
+                })
+                .catch(error => {
+                    console.error('Error reading video from URL:', error);
+                });
+        }
+
+        function uploadVideo(fileData) {
+            fetch('http://localhost:8000/videoEditor', {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ videoData: fileData })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Video uploaded successfully!');
+                })
+                .catch(error => {
+                    console.error('Error uploading video:', error);
+                });
+        }
+    </script>
+</body>
+
+</html>
